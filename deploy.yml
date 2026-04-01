@@ -1,0 +1,49 @@
+name: DiagConnect Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─── LINT & TEST ────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20.x", cache: "npm" }
+      - run: npm ci
+      - run: npm run db:generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: echo "Tests pass (add Jest tests here)"
+
+  # ─── DEPLOY TO RAILWAY ──────────────────────────────────────
+  deploy:
+    name: Deploy to Railway
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service diagconnect-api --detach
+
+      - name: Run DB migrations
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          DATABASE_URL:  ${{ secrets.DATABASE_URL }}
+        run: railway run --service diagconnect-api npx prisma migrate deploy
+
+      - name: Notify success
+        if: success()
+        run: echo "✅ DiagConnect deployed successfully to Railway"
