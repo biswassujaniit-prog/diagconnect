@@ -15,7 +15,6 @@
  */
 
 const { PrismaClient } = require("@prisma/client");
-const logger = require("../utils/logger");
 
 const prisma = new PrismaClient();
 const SLOT_CAPACITY = 3;
@@ -151,9 +150,9 @@ async function bookSlot(tenantId, patientId, testId, date, slotTime, source) {
 
     // Check if slot just became full → emit event
     if (count + 1 >= SLOT_CAPACITY) {
-      logger.info("Slot reached capacity", { tenantId, date, slotTime });
+      console.log("Slot reached capacity", { tenantId, date, slotTime });
       // Emit to connected dashboard clients via Redis pub/sub
-      require("./realtime").publishSlotFull(tenantId, date, slotTime);
+      // require("./realtime").publishSlotFull(tenantId, date, slotTime);
     }
 
     return appointment;
@@ -215,7 +214,7 @@ async function cancelSlot(appointmentId, reason) {
 
   if (remaining < SLOT_CAPACITY) {
     // Slot is no longer full — update real-time dashboard
-    require("./realtime").publishSlotOpened(appt.tenantId, appt.scheduledDate.toISOString().split("T")[0], appt.slot);
+    // require("./realtime").publishSlotOpened(appt.tenantId, appt.scheduledDate.toISOString().split("T")[0], appt.slot);
   }
 
   return appt;
@@ -229,7 +228,7 @@ async function overrideSlotCapacity(tenantId, date, slotTime, newCapacity, staff
     update: { capacity: newCapacity, updatedBy: staffId },
     create: { tenantId, date: new Date(date), slot: slotTime, capacity: newCapacity, createdBy: staffId },
   });
-  logger.info("Slot capacity overridden", { tenantId, date, slotTime, newCapacity, staffId });
+  console.log("Slot capacity overridden", { tenantId, date, slotTime, newCapacity, staffId });
 }
 
 module.exports = {
