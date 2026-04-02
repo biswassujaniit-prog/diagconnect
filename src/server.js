@@ -14,13 +14,13 @@ const bcrypt        = require("bcryptjs");
 const jwt           = require("jsonwebtoken");
 const { Resend }    = require("resend");
 
-const waService     = require("./whatsapp");
+const waService     = require("./services/whatsapp");
 const { WA_PHONE_ID } = waService;
-const rzpService    = require("./razorpay");
-const r2Service     = require("./storage");
-const { handleIncomingMessage, sendReminder24h, sendReminder2h, sendNoShowRecovery } = require("./botEngine");
-const { handleIncomingReport, startReportPolling } = require("./reportSync");
-const { getSlotAvailability, bookSlot, cancelSlot } = require("./slotManager");
+const rzpService    = require("./services/razorpay");
+const r2Service     = require("./services/storage");
+const { handleIncomingMessage, sendReminder24h, sendReminder2h, sendNoShowRecovery } = require("./services/botEngine");
+const { handleIncomingReport, startReportPolling } = require("./services/reportSync");
+const { getSlotAvailability, bookSlot, cancelSlot } = require("./services/slotManager");
 
 const app    = express();
 const resend = new Resend(process.env.RESEND_API_KEY || "re_4T3Y7pA7_BU2BSC6MMT2aNz962chsBbiQ");

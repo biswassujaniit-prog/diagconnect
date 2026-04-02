@@ -274,12 +274,25 @@ const TEMPLATES = {
     ({ name: "payment_link", bodyValues: [name, `₹${amount}`, link] }),
 };
 
+// Factory function for tenant-scoped WhatsApp service (used by reportSync)
+function createWhatsAppService(tenant) {
+  return {
+    sendText:        (to, text)                        => sendText(to, text),
+    sendInteractive: (to, body, buttons)               => sendInteractive(to, body, buttons),
+    sendDocument:    (to, docUrl, caption, filename)    => sendDocument(to, docUrl, caption, filename),
+    sendTemplate:    (to, name, bodyValues, hv, btns)   => sendTemplate(to, name, bodyValues, hv, btns),
+    sendImage:       (to, imageUrl, caption)            => sendImage(to, imageUrl, caption),
+    markRead:        ()                                 => markRead(),
+  };
+}
+
 module.exports = {
   sendText, sendInteractive, sendDocument, sendTemplate,
   sendImage, bulkSend, markRead,
   verifyWebhook, verifySignature,
   verifyToken, sendTestMessage,
   greeting, parsePhone, send,
+  createWhatsAppService,
   TEMPLATES,
   INTERAKT_API_KEY, WABA_ID, REGISTERED_PHONE, PHONE_NUMBER_ID,
   WA_PHONE_ID: PHONE_NUMBER_ID,  // backward compat alias
