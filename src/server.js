@@ -5,6 +5,7 @@
 
 require("dotenv").config();
 const express       = require("express");
+const path          = require("path");
 const cors          = require("cors");
 const helmet        = require("helmet");
 const rateLimit     = require("express-rate-limit");
@@ -33,6 +34,7 @@ app.use(cors({
   origin: [
     process.env.FRONTEND_URL || "http://localhost:3000",
     /\.railway\.app$/,
+    /\.onrender\.com$/,
     /\.diagconnect\.in$/,
   ],
   credentials: true,
@@ -49,6 +51,9 @@ app.use("/api/webhooks/razorpay", express.raw({ type: "*/*" }));
 app.use("/api/reports/incoming",  express.raw({ type: "*/*" }));
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// ─── SERVE FRONTEND DASHBOARD ─────────────────────────────────────────────────
+app.use(express.static(path.join(__dirname, "public")));
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get("/health", async (req, res) => {
@@ -470,6 +475,17 @@ app.post("/api/billing/upgrade", auth, async (req, res) => {
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Internal server error", ref: Date.now() });
+});
+
+// ─── CATCH-ALL: serve React frontend for non-API routes ──────────────────────
+app.get("*", (req, res) => {
+  const indexPath = path.join(__dirname, "public", "index.html");
+  const fs = require("fs");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).json({ error: "Not Found", hint: "Frontend not built. Run: cd client && npm run build" });
+  }
 });
 
 // ─── START ────────────────────────────────────────────────────────────────────
